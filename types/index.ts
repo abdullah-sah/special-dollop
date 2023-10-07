@@ -1,7 +1,9 @@
-export type DBResponse<T, K> = {
-	response: T;
-	additionalData?: K;
-} | Error;
+export type DBResponse<T, K> =
+	| {
+			response: T;
+			additionalData?: K;
+	  }
+	| Error;
 
 export type DBAttribute =
 	| 'UserId'
@@ -16,8 +18,16 @@ export type DBAttribute =
 	| 'Online'
 	| 'ProfilePicture';
 
-export type UserUpdateAttributes<T, K extends keyof T> = {
+export type UpdateAttributes<T, K extends keyof T> = {
 	[P in K]?: T[P];
+};
+
+export type RoomUpdateAttributes = {
+	name: string;
+	description: string;
+	members: User['id'][] | User['username'][];
+	isPrivate: boolean;
+	typing?: User['username'][];
 };
 
 export type UserAttributeMappings = {
@@ -82,16 +92,11 @@ export type SocialPlatform =
 	| 'snapchat'
 	| 'instagram';
 
-export type Room = {
+export interface Room extends RoomUpdateAttributes {
 	id: string;
-	name: string;
-	description: string;
-	createdBy: User;
+	createdBy: User['username'];
 	createdAt: string;
-	members: Record<User['id'], User>;
-	isPrivate: boolean;
-	typing?: User[];
-};
+}
 
 export type Message = {
 	id: string;

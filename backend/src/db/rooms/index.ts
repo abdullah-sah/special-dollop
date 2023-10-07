@@ -1,5 +1,8 @@
+import { randomUUID } from 'crypto';
 import {
-	AttributeValue,
+	DeleteItemCommand,
+	DeleteItemCommandInput,
+	DeleteItemCommandOutput,
 	DynamoDBClient,
 	ListTablesCommand,
 	PutItemCommand,
@@ -15,75 +18,60 @@ import {
 	UpdateItemCommandInput,
 	UpdateItemCommandOutput,
 } from '@aws-sdk/client-dynamodb';
-import { randomUUID } from 'crypto';
 import {
-	DBAttribute,
-	User,
-	UserAttributeMappings,
-	UserUpdateAttributes,
 	DBResponse,
-} from '../../../types';
-import { mapToDbRequest, mapArrayToDbList } from '../../utils';
+	Room,
+	RoomUpdateAttributes,
+	UpdateAttributes,
+} from '../../../../types';
+import {
+	capitaliseFirstLetter,
+	mapArrayToDbList,
+	mapToRoomDbRequest,
+} from '../../../utils';
 
 const client = new DynamoDBClient({ region: 'eu-north-1' });
 const command = new ListTablesCommand({});
-const TableName = 'Users';
+const TableName = 'Rooms';
 
-export const testDbConfig = async () => {
-	try {
-		const results = await client.send(command);
-		console.log(results.TableNames?.join('\n'));
-	} catch (err) {
-		console.error(err);
-	}
-};
-
-export const addNewUser = async (
-	username: User['username'],
-	password: User['password'],
-	email: User['email'],
-	fullname: User['fullname'],
-	displayname: User['displayname']
-): Promise<DBResponse<PutItemCommandOutput, User>> => {
-	const user: User = {
-		username,
-		password,
-		displayname,
-		email,
-		fullname,
+export const addNewRoom = async (
+	name: Room['name'],
+	description: Room['description'],
+	createdBy: Room['createdBy'],
+	members: Room['members'],
+	isPrivate: boolean
+): Promise<DBResponse<PutItemCommandOutput, Room>> => {
+	const room: Room = {
 		id: randomUUID(),
-		blockedList: [],
-		friendsList: [],
-		joinedRooms: [],
-		lastSeen: Date().toString(),
-		profilePicture: '',
-		online: false,
+		name,
+		description,
+		createdBy,
+		createdAt: new Date().toString(),
+		members,
+		isPrivate,
 	};
 
 	try {
-		const input: PutItemCommandInput = mapToDbRequest(user);
-
+		const input: PutItemCommandInput = mapToRoomDbRequest(room);
 		const putItemCommand = new PutItemCommand(input);
 		const response = await client.send(putItemCommand);
-		return { response, additionalData: { ...user, password: '' } };
+		return { response, additionalData: room };
 	} catch (err) {
 		return err as Error;
 	}
 };
 
-export const getUser = async (
-	user: User
-): Promise<DBResponse<QueryCommandOutput, User>> => {
+export const getRoom = async (
+	id: Room['id']
+): Promise<DBResponse<QueryCommandOutput, Room>> => {
+	const input: QueryCommandInput = {
+		TableName,
+		KeyConditionExpression: `RoomId = :pkValue`,
+		ExpressionAttributeValues: {
+			':pkValue': { S: id },
+		},
+	};
 	try {
-		const input: QueryCommandInput = {
-			TableName,
-			KeyConditionExpression: `UserId = :pkValue AND Username = :skValue`,
-			ExpressionAttributeValues: {
-				':pkValue': { S: user.id },
-				':skValue': { S: user.username },
-			},
-		};
-
 		const queryCommand = new QueryCommand(input);
 		const response = await client.send(queryCommand);
 		return { response };
@@ -92,40 +80,41 @@ export const getUser = async (
 	}
 };
 
-export const getUserByUsername = async (
-	username: User['username']
-): Promise<DBResponse<ScanCommandOutput, User>> => {
+export const getRoomByName = async (
+	name: Room['name']
+): Promise<DBResponse<ScanCommandOutput, Room>> => {
 	const input: ScanCommandInput = {
 		TableName,
-		FilterExpression: '#Username = :username',
+		FilterExpression: '#Name = :name',
 		ExpressionAttributeNames: {
-			'#Username': 'Username',
+			'#Name': 'Name',
 		},
 		ExpressionAttributeValues: {
-			':username': { S: username },
+			':name': { S: name },
 		},
 	};
 
 	try {
-		const command = new ScanCommand(input);
-		const response = await client.send(command);
+		const scanCommand = new ScanCommand(input);
+		const response = await client.send(scanCommand);
 		return { response };
 	} catch (err) {
 		return err as Error;
 	}
 };
 
-export const updateUser = async (
-	user: User,
-	args: UserUpdateAttributes<UserAttributeMappings, keyof UserAttributeMappings>
-): Promise<DBResponse<UpdateItemCommandOutput, User>> => {
+export const updateRoom = async (
+	id: Room['id'],
+	name: Room['name'],
+	attributes: UpdateAttributes<RoomUpdateAttributes, keyof RoomUpdateAttributes>
+): Promise<DBResponse<UpdateItemCommandOutput, Room>> => {
 	const expressionAttributeNames: UpdateItemCommandInput['ExpressionAttributeNames'] =
 		{};
 	const expressionAttributeValues: UpdateItemCommandInput['ExpressionAttributeValues'] =
 		{};
 
 	try {
-		Object.entries(args).forEach(([key, value], i) => {
+		Object.entries(attributes).forEach(([key, value], i) => {
 			const attributeName = `#attribute${i + 1}`;
 			const attributeValue =
 				typeof value === 'string'
@@ -138,14 +127,14 @@ export const updateUser = async (
 					? { L: mapArrayToDbList(value)! }
 					: undefined;
 
-			if (attributeValue !== undefined) {
-				expressionAttributeNames[attributeName] = key;
+			if (attributeValue != undefined) {
+				expressionAttributeNames[attributeName] = capitaliseFirstLetter(key);
 				expressionAttributeValues[`:value${i + 1}`] = attributeValue;
 			}
 		});
 
 		const updateExpression: UpdateItemCommandInput['UpdateExpression'] = `SET ${Object.entries(
-			args
+			attributes
 		)
 			.map((_, i) => `#attribute${i + 1} = :value${i + 1}`)
 			.join(', ')}`;
@@ -153,8 +142,8 @@ export const updateUser = async (
 		const input: UpdateItemCommandInput = {
 			TableName,
 			Key: {
-				UserId: { S: user.id },
-				Username: { S: user.username },
+				RoomId: { S: id },
+				Name: { S: name },
 			},
 			UpdateExpression: updateExpression,
 			ExpressionAttributeNames: expressionAttributeNames,
@@ -167,4 +156,22 @@ export const updateUser = async (
 	} catch (err) {
 		return err as Error;
 	}
+};
+
+export const deleteRoom = async (
+	id: Room['id'],
+	name: Room['name']
+): Promise<DBResponse<DeleteItemCommandOutput, Room>> => {
+	const input: DeleteItemCommandInput = {
+		TableName,
+		Key: {
+			RoomId: { S: id },
+			Name: { S: name },
+		},
+		ReturnValues: 'ALL_OLD',
+	};
+
+	const deleteCommand = new DeleteItemCommand(input);
+	const response = await client.send(deleteCommand);
+	return { response };
 };
