@@ -1,4 +1,7 @@
 import {
+	DeleteBackupCommandOutput,
+	DeleteItemCommand,
+	DeleteItemCommandInput,
 	DynamoDBClient,
 	ListTablesCommand,
 	PutItemCommand,
@@ -165,4 +168,22 @@ export const updateUser = async (
 	} catch (err) {
 		return err as Error;
 	}
+};
+
+export const deleteUser = async (
+	id: User['id'],
+	username: User['username']
+): Promise<DBResponse<DeleteBackupCommandOutput, User>> => {
+	const input: DeleteItemCommandInput = {
+		TableName,
+		Key: {
+			UserId: { S: id },
+			Username: { S: username },
+		},
+		ReturnValues: 'ALL_OLD',
+	};
+
+	const deleteCommand = new DeleteItemCommand(input);
+	const response = await client.send(deleteCommand);
+	return { response };
 };
