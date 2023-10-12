@@ -10,7 +10,6 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@aws-sdk/client-dynamodb": "^3.425.0",
 		"socket.io": "^4.7.2"
 	},
 	"devDependencies": {
