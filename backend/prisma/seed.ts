@@ -15,7 +15,11 @@ const seedRooms = async () => {
 	await prisma.roomMembers.deleteMany({});
 	for (let i = 0; i < mockData.rooms.length; i++) {
 		await prisma.room.create({
-			data: { ...mockData.rooms[i], createdAt: new Date(), members: {} },
+			data: {
+				...mockData.rooms[i],
+				createdAt: new Date(),
+				createdBy: { connect: { id: `${i + 1}` } },
+			},
 		});
 	}
 };

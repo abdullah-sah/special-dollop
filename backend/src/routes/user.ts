@@ -4,6 +4,20 @@ import { Request, Response, Router } from 'express';
 const prisma = new PrismaClient();
 const userRouter = Router();
 
+// get all existing users
+userRouter.get('/', async (req: Request, res: Response) => {
+	try {
+		const response = await prisma.user.findMany({
+			include: { joinedRooms: true },
+		});
+		res.json({ success: true, response });
+	} catch (err) {
+		if (err instanceof Error) {
+			res.json({ success: false, response: err.message });
+		} else res.json({ success: false, response: err });
+	}
+});
+
 // get a user given a userId
 userRouter.get('/:userId', async (req: Request, res: Response) => {
 	try {

@@ -4,6 +4,20 @@ import { PrismaClient, Room } from '@prisma/client';
 const prisma = new PrismaClient();
 const roomRouter = Router();
 
+// get all existing rooms
+roomRouter.get('/', async (req: Request, res: Response) => {
+	try {
+		const response = await prisma.room.findMany({
+			include: { members: true, createdBy: true },
+		});
+		res.json({ success: true, response });
+	} catch (err) {
+		if (err instanceof Error) {
+			res.json({ success: false, response: err.message });
+		} else res.json({ success: false, response: err });
+	}
+});
+
 // get a room given a roomid
 roomRouter.get('/:roomId', async (req: Request, res: Response) => {
 	try {
@@ -22,14 +36,20 @@ roomRouter.get('/:roomId', async (req: Request, res: Response) => {
 	}
 });
 
-// create a new room by passing in a room object in req.body
+// create a new room by passing in a room object, and a userId string in req.body
 roomRouter.post('/', async (req: Request, res: Response) => {
 	try {
-		if (!req.body.room) {
-			throw new Error('No "room" object was passed in the req.body');
+		if (!req.body.room || !req.body.userId) {
+			throw new Error(
+				`No "${
+					!req.body.room ? 'room' : 'userId'
+				}" value was passed in the req.body`
+			);
 		}
-		const { room }: { room: Room } = req.body;
-		const response = await prisma.room.create({ data: room });
+		const { room, userId } = req.body;
+		const response = await prisma.room.create({
+			data: { ...room, createdBy: { connect: { id: userId } } },
+		});
 		res.json({ success: true, response });
 	} catch (err) {
 		if (err instanceof Error) {
