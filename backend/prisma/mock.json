@@ -1,0 +1,69 @@
+{
+	"users": [
+		{
+			"id": "1",
+			"username": "user1",
+			"displayname": "User One",
+			"password": "password1",
+			"email": "testuser1@example.com",
+			"online": true,
+			"lastSeen": "2023-09-28",
+			"fullname": "User One Fullname",
+			"profilePicture": "https://example.com/user1_profile.jpg",
+			"location": "Somewhere",
+			"preferences": "{\"theme\":\"light\",\"language\":\"en\"}",
+			"socials": "{\"twitter\":\"https://twitter.com/user1\",\"github\":\"https://github.com/user1\"}",
+			"isTyping": false
+		},
+		{
+			"id": "2",
+			"username": "user2",
+			"displayname": "User Two",
+			"password": "password2",
+			"email": "testuser2@example.com",
+			"online": true,
+			"lastSeen": "2023-09-28",
+			"fullname": "User Two Fullname",
+			"profilePicture": "https://example.com/user2_profile.jpg",
+			"location": "SomeOtherWhere",
+			"preferences": "{\"theme\":\"light\",\"language\":\"en\"}",
+			"socials": "{\"twitter\":\"https://twitter.com/user2\",\"github\":\"https://github.com/user2\"}",
+			"isTyping": false
+		},
+		{
+			"id": "3",
+			"username": "user3",
+			"displayname": "User Three",
+			"password": "password3",
+			"email": "testuser3@example.com",
+			"online": true,
+			"lastSeen": "2023-09-28",
+			"fullname": "User Three Fullname",
+			"profilePicture": "https://example.com/user3_profile.jpg",
+			"location": "Narnia",
+			"preferences": "{\"language\":\"en\",\"theme\":\"light\"}",
+			"socials": "{\"twitter\":\"https://twitter.com/user3\",\"github\":\"https://github.com/user3\"}",
+			"isTyping": false
+		}
+	],
+	"rooms": [
+		{
+			"id": "1",
+			"name": "Room 1",
+			"description": "This is room 1",
+			"isPrivate": false
+		},
+		{
+			"id": "2",
+			"name": "Room 2",
+			"description": "This is room 2",
+			"isPrivate": false
+		},
+		{
+			"id": "3",
+			"name": "Room 3",
+			"description": "This is room 3",
+			"isPrivate": false
+		}
+	]
+}

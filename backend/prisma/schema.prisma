@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../src/db/dev.db"
+}
+
+model User {
+  id             String        @id @default(uuid())
+  username       String?       @unique
+  displayname    String?
+  password       String?
+  email          String?       @unique
+  online         Boolean?
+  lastSeen       String?
+  friendsList    User[]        @relation("Friends")
+  friendOf       User[]        @relation("Friends")
+  blockedList    User[]        @relation("Blocked")
+  blockedBy      User[]        @relation("Blocked")
+  joinedRooms    RoomMembers[]
+  createdRooms   Room[]        @relation("CreatedRooms")
+  fullname       String?
+  profilePicture String?
+  location       String?
+  preferences    String?
+  socials        String?
+  isTyping       Boolean       @default(false)
+}
+
+model Room {
+  id          String        @id @default(uuid())
+  createdBy   User?         @relation("CreatedRooms", fields: [userId], references: [id])
+  userId      String?
+  createdAt   DateTime?     @default(now())
+  name        String?
+  description String?
+  isPrivate   Boolean?
+  members     RoomMembers[]
+}
+
+model RoomMembers {
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  room     Room     @relation(fields: [roomId], references: [id])
+  roomId   String
+  joinedAt DateTime @default(now())
+
+  @@id([userId, roomId])
+}

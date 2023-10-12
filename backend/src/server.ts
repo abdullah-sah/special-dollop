@@ -5,13 +5,20 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import { ClientToServerEvents, ServerToClientEvents } from '../../types';
 import chatEvents from './socket/chatEvents';
+import chatRouter from './routes/chat';
+import userRouter from './routes/user';
+import roomRouter from './routes/room';
 
 const cors = require('cors');
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const app = express();
-app.use(cors());
+app.use(cors(), express.json());
+
+app.use('/api/user', userRouter);
+app.use('/api/room', roomRouter);
+app.use('/api/chat', chatRouter);
 
 const server = http.createServer(app);
 

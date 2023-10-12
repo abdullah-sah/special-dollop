@@ -22,14 +22,6 @@ export type UpdateAttributes<T, K extends keyof T> = {
 	[P in K]?: T[P];
 };
 
-export type RoomUpdateAttributes = {
-	name: string;
-	description: string;
-	members: User['id'][] | User['username'][];
-	isPrivate: boolean;
-	typing?: User['username'][];
-};
-
 export type UserAttributeMappings = {
 	UserId: User['id'];
 	Username: User['username'];
@@ -65,9 +57,9 @@ export type User = {
 	displayname: string;
 	password: string;
 	email: string;
-	friendsList: User['id'][];
-	blockedList: User['id'][];
-	joinedRooms: Room['id'][];
+	friendsList: User[];
+	blockedList: User[];
+	joinedRooms: Room[];
 	online: boolean;
 	lastSeen: string;
 	fullname: string;
@@ -82,7 +74,7 @@ export type UserPreferences = {
 	language: string;
 };
 
-export type SocialLink = Record<SocialPlatform, string>;
+export type SocialLink = Partial<Record<SocialPlatform, string>>;
 
 export type SocialPlatform =
 	| 'facebook'
@@ -92,11 +84,16 @@ export type SocialPlatform =
 	| 'snapchat'
 	| 'instagram';
 
-export interface Room extends RoomUpdateAttributes {
+export type Room = {
 	id: string;
 	createdBy: User['username'];
 	createdAt: string;
-}
+	name: string;
+	description: string;
+	members: User['id'][] | User['username'][];
+	isPrivate: boolean;
+	typingUsers?: User[];
+};
 
 export type Message = {
 	id: string;
