@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { PrismaClient, Room } from '@prisma/client';
+import { PrismaClient, Room } from '../../node_modules/generated/prisma';
 
 const prisma = new PrismaClient();
 const roomRouter = Router();
@@ -40,10 +40,9 @@ roomRouter.get('/:roomId', async (req: Request, res: Response) => {
 roomRouter.post('/', async (req: Request, res: Response) => {
 	try {
 		if (!req.body.room || !req.body.userId) {
+			const causeOfErr = !req.body.room ? 'room' : 'userId';
 			throw new Error(
-				`No "${
-					!req.body.room ? 'room' : 'userId'
-				}" value was passed in the req.body`
+				`No "${causeOfErr}" value was passed in the req.body, instead "${req.body[causeOfErr]}" was passed in`
 			);
 		}
 		const { room, userId } = req.body;

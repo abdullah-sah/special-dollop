@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../node_modules/generated/prisma';
 import mockData from './mock.json';
 
 const prisma = new PrismaClient();

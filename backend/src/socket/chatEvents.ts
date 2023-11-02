@@ -1,20 +1,28 @@
-import { Socket } from 'socket.io';
-import {
-	ClientToServerEvents,
-	Room,
-	User,
-	ServerToClientEvents,
-} from '../../../types';
+import { PrismaClient, Room } from '../../node_modules/generated/prisma';
+import { getUser } from './userEvents';
 
-const CHAT_BOT = 'BigManTing';
+const prisma = new PrismaClient();
 
-const rooms: Record<Room['id'], User['id'][]> = {};
-const connectedSockets: Record<User['id'], User> = {};
-
-const chatEvents = (
-	socket: Socket<ClientToServerEvents, ServerToClientEvents>
+export const createMessage = async (
+	message: string,
+	socketId: string,
+	roomId?: Room['id']
 ) => {
-	
+	try {
+		const { response } = await getUser(socketId, true, true);
+		if (response instanceof Error) throw new Error(response.message);
+		const newMessage = await prisma.message.create({
+			data: {
+				content: message,
+				createdAt: new Date().toISOString(),
+				userId: response.id,
+				roomId: roomId ?? 'N/A',
+			},
+		});
+		return newMessage;
+	} catch (err) {
+		if (err instanceof Error) {
+			return { success: false, error: err.message };
+		} else return { success: false, error: err };
+	}
 };
-
-export default chatEvents;

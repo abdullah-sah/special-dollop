@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/generated/prisma"
 }
 
 datasource db {
@@ -12,6 +13,7 @@ datasource db {
 
 model User {
   id             String        @id @default(uuid())
+  socketId       String?       @unique
   username       String?       @unique
   displayname    String?
   password       String?
@@ -30,6 +32,7 @@ model User {
   preferences    String?
   socials        String?
   isTyping       Boolean       @default(false)
+  messages       Message[]
 }
 
 model Room {
@@ -41,6 +44,7 @@ model Room {
   description String?
   isPrivate   Boolean?
   members     RoomMembers[]
+  messages    Message[]
 }
 
 model RoomMembers {
@@ -51,4 +55,16 @@ model RoomMembers {
   joinedAt DateTime @default(now())
 
   @@id([userId, roomId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  userId    String
+  roomId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
 }
