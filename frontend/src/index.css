@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	@font-face {
+		font-family: 'blender pro';
+		src: url('../src/assets/fonts/blenderpro/BlenderPro-Book.woff') format('woff');
+	}
+}
+
+#root {
+	display: flex;
+	flex-direction: row;
+	background-color: #161616;
+	height: 100vh;
+	overflow: hidden;
+}
+
+nav {
+	flex-shrink: 0;
+}
+
+main { 
+	flex-grow: 1;
+	overflow-y: auto;
+}
