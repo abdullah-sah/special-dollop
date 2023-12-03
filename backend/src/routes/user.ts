@@ -52,11 +52,14 @@ userRouter.post('/signup', async (req: Request, res: Response) => {
 		}
 		const { user }: { user: User } = req.body;
 		const hashedPassword = await bcrypt.hash(user.password!, 10);
-		await prisma.user.create({ data: { ...user, password: hashedPassword } });
+		const newUser = await prisma.user.create({
+			data: { ...user, password: hashedPassword },
+			include: { messages: true, joinedRooms: true },
+		});
 		const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
 			expiresIn: '2 days',
 		});
-		res.status(201).json({ success: true, token });
+		res.status(201).json({ success: true, data: { token, user: newUser } });
 	} catch (err) {
 		if (err instanceof Error) {
 			res.status(400).json({ success: false, response: err.message });
@@ -67,20 +70,29 @@ userRouter.post('/signup', async (req: Request, res: Response) => {
 userRouter.post('/signin', async (req: Request, res: Response) => {
 	const { id, password } = req.body;
 	if (!id || !password) {
-		throw new Error('Username and password are required in request.body');
+		throw new Error('users id and password are required in request.body');
 	}
 
 	try {
-		const user = await prisma.user.findUnique({ where: { id } });
+		let user = await prisma.user.findUnique({
+			where: { id },
+			include: { messages: true, joinedRooms: true },
+		});
 
-		if (!user) throw new Error(`The user with an id of ${id} was not found`);
+		if (!user) {
+			user = await prisma.user.findUnique({
+				where: { username: id },
+				include: { messages: true, joinedRooms: true },
+			});
+			if (!user) throw new Error(`Couldn't find that user`);
+		}
 
 		const isPasswordValid = await bcrypt.compare(password, user.password!);
 		if (!isPasswordValid) throw new Error('Invalid credentials');
 		const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
 			expiresIn: '2 days',
 		});
-		res.json({ success: true, token });
+		res.json({ success: true, data: { token, user } });
 	} catch (err) {
 		if (err instanceof Error) {
 			res.status(401).json({ success: false, response: err.message });

@@ -1,13 +1,15 @@
 import { FC } from 'react';
 import ImageLoader from '../ui/ImageLoader';
 import { Link } from 'react-router-dom';
+import AddItemIcon from '../ui/icons/AddItem';
 
 type Props = {
 	username: string;
+	lastSeen?: string;
 	link?: string;
 	profilePicture?: string;
 	chatPicture?: string;
-	lastSeen: string;
+	template?: boolean;
 };
 
 const defaultChatPicture: string =
@@ -22,39 +24,58 @@ const MessageCard: FC<Props> = ({
 	profilePicture,
 	chatPicture,
 	lastSeen,
+	template,
 }) => {
-	return (
-		<Link
-			to={link || '/'}
-			className='flex flex-col border rounded-[2rem] card border-neutral-400 border-opacity-40 shadow-md shadow-slate-800 w-80'
-		>
-			<div className='flex flex-row items-center gap-3 p-4 image-container'>
-				{profilePicture && (
+	const handleCreateMessage = () => {};
+
+	if (!template)
+		return (
+			<Link
+				to={link || '/'}
+				className='flex flex-col border rounded-[2rem] card border-neutral-400 border-opacity-40 shadow-md shadow-slate-800 w-80'
+			>
+				<div className='flex flex-row items-center gap-3 p-4 image-container'>
+					{profilePicture && (
+						<ImageLoader
+							src={profilePicture}
+							alt='profile picture'
+							width='50px'
+							className='rounded-full'
+							fallbackSrc={defaultProfilePicture}
+						/>
+					)}
+					<div className='flex flex-col justify-center text-container'>
+						<p className='text-lg font-bold'>{username}</p>
+						<p className='text-xs'>last seen: {lastSeen}</p>
+					</div>
+				</div>
+
+				{chatPicture && (
 					<ImageLoader
-						src={profilePicture}
-						alt='profile picture'
-						width='50px'
-						className='rounded-full'
-						fallbackSrc={defaultProfilePicture}
+						src={chatPicture}
+						width='100%'
+						fallbackSrc={defaultChatPicture}
+						className='rounded-b-[2rem]'
+						imgProps={{ 'aria-hidden': true }}
 					/>
 				)}
-				<div className='flex flex-col justify-center text-container'>
-					<p className='text-lg font-bold'>{username}</p>
-					<p className='text-xs'>last seen: {lastSeen}</p>
+			</Link>
+		);
+	else {
+		return (
+			<div
+				className='cursor-pointer flex flex-col border rounded-[2rem] card border-neutral-400 border-opacity-40 shadow-md shadow-slate-800 w-80'
+				onClick={handleCreateMessage}
+			>
+				<div className='flex flex-row items-center gap-3 p-4 image-container'>
+					<AddItemIcon className='w-16' />
+					<div className='flex flex-col justify-center text-container'>
+						<p className='text-lg font-bold capitalize'>{username}</p>
+					</div>
 				</div>
 			</div>
-
-			{chatPicture && (
-				<ImageLoader
-					src={chatPicture}
-					width='100%'
-					fallbackSrc={defaultChatPicture}
-					className='rounded-b-[2rem]'
-					imgProps={{ 'aria-hidden': true }}
-				/>
-			)}
-		</Link>
-	);
+		);
+	}
 };
 
 export default MessageCard;

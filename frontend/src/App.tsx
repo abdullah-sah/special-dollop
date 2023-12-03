@@ -46,7 +46,7 @@ function App() {
 				<header>
 					<Navbar />
 				</header>
-				<main className='w-full font-mono'>
+				<main className='w-full font-mono text-white'>
 					<Outlet />
 				</main>
 			</AuthProvider>

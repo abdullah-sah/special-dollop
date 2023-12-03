@@ -12,7 +12,7 @@ const UserIcon: FC<Props> = ({ className }) => {
 		<svg
 			className={`${
 				!widthProvided ? 'w-6' : ''
-			} text-gray-800 dark:text-white ${className}`}
+			} text-gray-800 text-white ${className}`}
 			aria-hidden='true'
 			xmlns='http://www.w3.org/2000/svg'
 			fill='currentColor'

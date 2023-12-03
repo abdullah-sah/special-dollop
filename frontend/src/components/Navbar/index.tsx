@@ -10,7 +10,7 @@ const Navbar: FC = () => {
 				<ul className='flex flex-col space-y-2'>
 					<NavItem link='/' type='home' />
 					<NavItem link='/' type='search' />
-					<NavItem link='/' type='chat' />
+					<NavItem link='/chat' type='chat' />
 					<NavItem link='/' type='group' />
 				</ul>
 			</nav>

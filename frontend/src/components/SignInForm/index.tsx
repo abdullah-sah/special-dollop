@@ -1,18 +1,44 @@
 import { FC, FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import signIn from '../../utils/signin';
+import { default as signUp } from '../../utils/register';
 
 type Props = {
 	register?: boolean;
 };
 
 const SignInForm: FC<Props> = ({ register }) => {
-	const { setUsername, setPassword } = useAuth();
+	const {
+		username,
+		email,
+		password,
+		setUser,
+		setUsername,
+		setEmail,
+		setPassword,
+		setToken,
+	} = useAuth();
+	const navigate = useNavigate();
 
 	const inputClasses: string = 'p-4 rounded-full bg-primary-dark min-w-full';
 
-	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+
+		const response = register
+			? await signUp(username, password, email)
+			: await signIn(username, password);
+		if (response.success) {
+			setUser(response.data.user);
+			setToken(response.data.token);
+			navigate('/home');
+		} else {
+			console.error(
+				'there was an error with sign/register. the response was: ',
+				response
+			);
+		}
 	};
 
 	return (
@@ -33,6 +59,22 @@ const SignInForm: FC<Props> = ({ register }) => {
 					onChange={(e) => setUsername(e.target.value)}
 					required
 				/>
+
+				{register && (
+					<>
+						<label htmlFor='email' className='text-lg'>
+							Enter your email
+						</label>
+						<input
+							type='text'
+							id='email'
+							className={inputClasses}
+							placeholder='Email'
+							onChange={(e) => setEmail(e.target.value)}
+							required
+						/>
+					</>
+				)}
 				<label htmlFor='password' className='text-lg'>
 					Password
 				</label>
@@ -44,13 +86,12 @@ const SignInForm: FC<Props> = ({ register }) => {
 					onChange={(e) => setPassword(e.target.value)}
 					required
 				/>
-				<Link
-					to='/home'
+				<button
 					type='submit'
 					className='p-4 text-center text-black bg-white rounded-2xl'
 				>
 					{register ? 'Register' : 'Log in'}
-				</Link>
+				</button>
 				<Link
 					to={register ? '/' : '/register'}
 					className='text-white transition opacity-70 hover:opacity-100'

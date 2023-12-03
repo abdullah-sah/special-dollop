@@ -4,10 +4,15 @@ import {
 	RoomMembers,
 } from '../backend/node_modules/generated/prisma';
 
-export type ApiResponse<T> = {
-	success: boolean;
-	response: T | Error;
-};
+export type ApiResponse<T> =
+	| {
+			success: true;
+			data: T;
+	  }
+	| {
+			success: false;
+			error: string;
+	  };
 
 declare global {
 	namespace Express {

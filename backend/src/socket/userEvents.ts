@@ -1,5 +1,6 @@
 import { User } from '../../node_modules/generated/prisma';
 import { ApiResponse } from '../../../types';
+import { v4 as uuidv4 } from 'uuid';
 
 // const baseUrl = `http://localhost:${process.env.VITE_PORT || 5001}/api/user`;
 const baseUrl = `http://localhost:${5001}/api`;
@@ -9,10 +10,11 @@ export const updateUserSocketId = async (
 	newSocketId: string
 ) => {
 	// console.log('the user id that was passed into me was', userId);
-	const { response } = await getUser(userId, false, true);
-	if (!(response instanceof Error)) {
+	const response = await getUser(userId, false);
+	if (response.success) {
 		// console.log('the response id was ', response);
-		const url = `${baseUrl}/user/${response.id}`;
+		const user = response.data;
+		const url = `${baseUrl}/user/${user.id}`;
 		const body: BodyInit = JSON.stringify({
 			updatedUser: { ...response, socketId: newSocketId },
 		});
@@ -31,19 +33,21 @@ export const updateUserSocketId = async (
 
 export const getUser = async (
 	id: User['id' | 'socketId'],
-	bySocket: boolean,
-	basicUser?: boolean
-) => {
-		const url = `${baseUrl}/${bySocket ? 'socket' : 'user'}/${id}`;
-		// console.log('the request url is', url);
-		const res = await fetch(url, { method: 'GET'});
+	bySocket: boolean
+): Promise<ApiResponse<User>> => {
+	const url = `${baseUrl}/${bySocket ? 'socket' : 'user'}/${id}`;
+	// console.log('the request url is', url);
+	try {
+		const res = await fetch(url, { method: 'GET' });
 		const data: ApiResponse<User & { joinedRooms: User[] }> = await res.json();
-		// console.log('the response that is being returned from the getUser function is', data);
-		if (!(data.response instanceof Error) && basicUser) {
-			const { joinedRooms, ...restOfData } = data.response;
-			return { response: { ...restOfData } };
+		if (!data.success) {
+			throw new Error(data.error as unknown as string);
 		}
+		// console.log('the response that is being returned from the getUser function is', data);
 		return data;
+	} catch (error) {
+		return { success: false, error: error as string };
+	}
 };
 
 export const updateUser = async (updatedUser: User) => {
@@ -52,6 +56,17 @@ export const updateUser = async (updatedUser: User) => {
 	const headers = new Headers();
 	headers.append('Content-Type', 'application/json');
 	const options: RequestInit = { headers, body, method: 'PUT' };
-	const res = await fetch(url, options);
-	return (await res.json()) as ApiResponse<User>;
+	try {
+		const res = await fetch(url, options);
+		const data: ApiResponse<User> = await res.json();
+		if (!data.success) {
+			throw new Error(data.error);
+		}
+		return (await res.json()) as ApiResponse<User>;
+	} catch (error) {
+		return {
+			success: false,
+			response: error instanceof Error ? error.message : String(error),
+		};
+	}
 };

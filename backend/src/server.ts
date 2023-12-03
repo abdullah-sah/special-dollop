@@ -56,14 +56,15 @@ io.on(
 		});
 
 		socket.on('private_message', async (recipientUserId, message) => {
-			const { response } = await getUser(recipientUserId, false);
-			if (!(response instanceof Error) && response.socketId) {
+			const response = await getUser(recipientUserId, false);
+			if (response.success && response.data.socketId) {
+				const { data } = response;
 				console.log(
 					'the response socket id in question is indeed',
-					response.socketId
+					data.socketId
 				);
 				console.log('while the socket id is in fact', socket.id);
-				io.to(response.socketId).emit('receive_message', {
+				io.to(data.socketId!).emit('receive_message', {
 					message,
 					senderId: socket.id,
 					__createdtime__: new Date().toDateString(),

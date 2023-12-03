@@ -3,7 +3,7 @@ import { FC } from 'react';
 const GroupIcon: FC = () => {
 	return (
 		<svg
-			className='w-6 h-6 text-gray-800 dark:text-white'
+			className='w-6 h-6 text-white'
 			xmlns='http://www.w3.org/2000/svg'
 			aria-hidden='true'
 			fill='currentColor'

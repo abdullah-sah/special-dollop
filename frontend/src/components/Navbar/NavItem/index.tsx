@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, ReactElement, createElement } from 'react';
 import type { NavItemProps } from '../types';
 import type { Icon } from '../../ui/icons/types';
+import { Link } from 'react-router-dom';
 
 const NavItem: FC<NavItemProps> = ({ type, link }) => {
 	const [IconComponent, setIconComponent] = useState<ReactElement | null>(null);
@@ -22,13 +23,13 @@ const NavItem: FC<NavItemProps> = ({ type, link }) => {
 	return (
 		<>
 			<li className='w-full h-full p-4 text-xl text-white list-none'>
-				<a
+				<Link
+					to={link}
 					className='flex flex-col items-center justify-center text-base font-bold transition-opacity opacity-60 hover:opacity-100'
-					href={link}
 				>
 					{IconComponent ?? ''}
 					{type}
-				</a>
+				</Link>
 			</li>
 		</>
 	);
