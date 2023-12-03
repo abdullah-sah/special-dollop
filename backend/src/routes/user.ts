@@ -11,7 +11,7 @@ const userRouter = Router();
 userRouter.get('/', async (req: Request, res: Response) => {
 	try {
 		const response = await prisma.user.findMany({
-			include: { joinedRooms: true },
+			include: { messages: true, joinedRooms: true },
 		});
 		res.json({ success: true, response });
 	} catch (err) {
@@ -29,7 +29,7 @@ userRouter.get('/:userId', async (req: Request, res: Response) => {
 		}
 		const user = await prisma.user.findUnique({
 			where: { id: req.params.userId },
-			include: { joinedRooms: true },
+			include: { messages: true, joinedRooms: true },
 		});
 		if (!user)
 			throw new Error(
