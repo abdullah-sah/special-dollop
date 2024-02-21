@@ -20,8 +20,7 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
 			return res.status(403).json({
 				success: false,
 				message: err.message,
-				token,
-				expectedToken: JWT_SECRET,
+				tokenPassedIn: token,
 			});
 		req.user = user;
 		next();

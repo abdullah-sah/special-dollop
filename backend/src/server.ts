@@ -20,9 +20,9 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 const app = express();
 app.use(cors(), express.json());
 
-app.use('/api/user', authenticate, userRouter);
+app.use('/api/user', userRouter);
 app.use('/api/room', authenticate, roomRouter);
-app.use('/api/chat', authenticate, chatRouter);
+app.use('/api/chat', chatRouter);
 app.use('/api/socket', authenticate, socketRouter);
 
 const server = http.createServer(app);

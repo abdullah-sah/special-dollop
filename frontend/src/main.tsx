@@ -6,6 +6,7 @@ import './index.css';
 import Home from './pages/Home.tsx';
 import SignIn from './pages/SignIn.tsx';
 import Chat from './pages/Chat.tsx';
+import ChatInterface from './components/ChatInterface/index.tsx';
 
 const router = createBrowserRouter([
 	{
@@ -27,6 +28,12 @@ const router = createBrowserRouter([
 			{
 				path: 'chat',
 				element: <Chat />,
+				children: [
+					{
+						path: ':chatId',
+						element: <ChatInterface />,
+					},
+				],
 			},
 		],
 	},

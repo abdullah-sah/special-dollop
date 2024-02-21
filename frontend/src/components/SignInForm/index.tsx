@@ -1,8 +1,7 @@
 import { FC, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import signIn from '../../utils/signin';
-import { default as signUp } from '../../utils/register';
+import { signIn, signUp } from '../../utils/user';
 
 type Props = {
 	register?: boolean;

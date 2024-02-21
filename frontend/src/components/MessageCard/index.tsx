@@ -1,7 +1,9 @@
 import { FC } from 'react';
+import useAuth from '../../hooks/useAuth';
 import ImageLoader from '../ui/ImageLoader';
 import { Link } from 'react-router-dom';
 import AddItemIcon from '../ui/icons/AddItem';
+import { UserWithRelations } from '../../../../types';
 
 type Props = {
 	username: string;
@@ -26,6 +28,8 @@ const MessageCard: FC<Props> = ({
 	lastSeen,
 	template,
 }) => {
+	const { user } = useAuth();
+
 	const handleCreateMessage = () => {};
 
 	if (!template)

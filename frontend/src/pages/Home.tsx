@@ -10,10 +10,10 @@ const Home: FC = () => {
 
 	useEffect(() => {
 		console.log('yo');
-	}, [user.messages?.length, user.joinedRooms?.length]);
+	}, [user.receivedMessages, user.joinedRooms?.length]);
 
 	return (
-		<div className='flex flex-col px-12 gap-2 text-white'>
+		<div className='flex flex-col gap-2 px-12 text-white'>
 			<section className='flex flex-row p-4 text-white title'>
 				<UserIcon className='w-24 h-24' />
 				<div className='flex flex-col justify-center p-4 title-message'>
@@ -33,11 +33,11 @@ const Home: FC = () => {
 			<section className='flex flex-col gap-4 message-section'>
 				<h2 className='text-2xl font-bold'>Messages</h2>
 				<div className='flex flex-row flex-wrap gap-4 message-card-container'>
-					{user.messages?.length > 0 ? (
-						user.messages.map((_, i) => (
+					{user.receivedMessages && user.receivedMessages?.length > 0 ? (
+						user.receivedMessages?.map((message, i) => (
 							<MessageCard
 								profilePicture='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3xM2vjVkOGoeb34L7o1BU93Nmi0zAz6BvDw&usqp=CAU'
-								username='Steve Gary'
+								username={message.recipient.username ?? 'Anonymouse Recipient'}
 								chatPicture='https://www.gamewallpapers.com/img_script/wallpaper_dir/img.php?src=wallpaper_halo_infinite_32_2560x1440.jpg&height=450&width=800&fill-to-fit&sharpen'
 								lastSeen='23/09/23'
 								key={i}
@@ -52,11 +52,11 @@ const Home: FC = () => {
 			<section className='flex flex-col gap-4 room-section'>
 				<h2 className='text-2xl font-bold'>Rooms</h2>
 				<div className='flex flex-row flex-wrap gap-4 room-card-container'>
-					{user.joinedRooms?.length > 0 ? (
-						user.joinedRooms.map((_, i) => (
+					{user.joinedRooms && user.joinedRooms?.length > 0 ? (
+						user.joinedRooms?.map((roomMember, i) => (
 							<MessageCard
 								profilePicture='sdlfk'
-								username='Room number'
+								username={roomMember.user?.username ?? 'Anonymous User'}
 								chatPicture='https://www.gamewallpapers.com/img_script/wallpaper_dir/img.php?src=wallpaper_halo_infinite_32_2560x1440.jpg&height=450&width=800&fill-to-fit&sharpen'
 								lastSeen='23/09/23'
 								key={i}

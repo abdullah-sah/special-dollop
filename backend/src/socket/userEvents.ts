@@ -1,5 +1,5 @@
-import { User } from '../../node_modules/generated/prisma';
-import { ApiResponse } from '../../../types';
+import { User, Message } from '../../node_modules/generated/prisma';
+import { ApiResponse, UserWithRelations } from '../../../types';
 import { v4 as uuidv4 } from 'uuid';
 
 // const baseUrl = `http://localhost:${process.env.VITE_PORT || 5001}/api/user`;
@@ -39,7 +39,7 @@ export const getUser = async (
 	// console.log('the request url is', url);
 	try {
 		const res = await fetch(url, { method: 'GET' });
-		const data: ApiResponse<User & { joinedRooms: User[] }> = await res.json();
+		const data: ApiResponse<UserWithRelations> = await res.json();
 		if (!data.success) {
 			throw new Error(data.error as unknown as string);
 		}

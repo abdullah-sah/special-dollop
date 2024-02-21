@@ -7,13 +7,41 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 const userRouter = Router();
 
-// get all existing users
-userRouter.get('/', async (req: Request, res: Response) => {
+// get a user given a userId or username
+userRouter.get('/:userId', async (req: Request, res: Response) => {
 	try {
-		const response = await prisma.user.findMany({
-			include: { messages: true, joinedRooms: true },
+		if (!req.params.userId) {
+			throw new Error('No userId or username passed in as a parameter');
+		}
+		let user = await prisma.user.findUnique({
+			where: { id: req.params.userId },
+			include: {
+				sentMessages: true,
+				receivedMessages: true,
+				joinedRooms: { include: { room: true, user: true } },
+				friendsList: true,
+				createdRooms: true,
+			},
 		});
-		res.json({ success: true, response });
+		if (!user) {
+			user = await prisma.user.findUnique({
+				where: { username: req.params.userId },
+				include: {
+					sentMessages: true,
+					receivedMessages: true,
+					joinedRooms: { include: { room: true, user: true } },
+					friendsList: true,
+					createdRooms: true,
+				},
+			});
+
+			if (!user)
+				throw new Error(
+					`That user was not found: you passed in ${req.params.userId} as the userId/username`
+				);
+		}
+		const { password, ...restOfUser } = user;
+		res.json({ success: true, data: { ...restOfUser } });
 	} catch (err) {
 		if (err instanceof Error) {
 			res.json({ success: false, response: err.message });
@@ -21,25 +49,45 @@ userRouter.get('/', async (req: Request, res: Response) => {
 	}
 });
 
-// get a user given a userId
-userRouter.get('/:userId', async (req: Request, res: Response) => {
+// search for a user based on their username
+userRouter.get('/search/:searchTerm', async (req: Request, res: Response) => {
 	try {
-		if (!req.params.userId) {
-			throw new Error('No "userId" passed in as a parameter');
+		if (!req.params.searchTerm) {
+			throw new Error('Must pass in search term as param');
 		}
-		const user = await prisma.user.findUnique({
-			where: { id: req.params.userId },
-			include: { messages: true, joinedRooms: true },
+
+		const users = await prisma.user.findMany({
+			where: {
+				username: {
+					contains: req.params.searchTerm,
+				},
+			},
+			include: {
+				sentMessages: true,
+				receivedMessages: true,
+				joinedRooms: { include: { room: true, user: true } },
+				friendsList: true,
+				createdRooms: true,
+			},
 		});
-		if (!user)
-			throw new Error(
-				`That user was not found: you passed in ${req.params.userId} as the userId`
-			);
-		res.json({ success: true, response: user });
+
+		if (!users || users.length === 0) {
+			return res.status(404).json({
+				success: false,
+				response: `No users found matching the search term ${req.params.searchTerm}`,
+			});
+		}
+
+		const usersWithoutPasswords = users.map((user) => {
+			const { password, ...restOfUser } = user;
+			return { ...restOfUser };
+		});
+
+		res.json({ success: true, data: usersWithoutPasswords });
 	} catch (err) {
 		if (err instanceof Error) {
-			res.json({ success: false, response: err.message });
-		} else res.json({ success: false, response: err });
+			res.status(400).json({ success: false, response: err.message });
+		} else res.status(400).json({ success: false, response: err });
 	}
 });
 
@@ -54,12 +102,21 @@ userRouter.post('/signup', async (req: Request, res: Response) => {
 		const hashedPassword = await bcrypt.hash(user.password!, 10);
 		const newUser = await prisma.user.create({
 			data: { ...user, password: hashedPassword },
-			include: { messages: true, joinedRooms: true },
+			include: {
+				sentMessages: true,
+				receivedMessages: true,
+				joinedRooms: { include: { room: true, user: true } },
+				friendsList: true,
+				createdRooms: true,
+			},
 		});
 		const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
 			expiresIn: '2 days',
 		});
-		res.status(201).json({ success: true, data: { token, user: newUser } });
+		const { password, ...restOfUser } = newUser;
+		res
+			.status(201)
+			.json({ success: true, data: { token, user: { ...restOfUser } } });
 	} catch (err) {
 		if (err instanceof Error) {
 			res.status(400).json({ success: false, response: err.message });
@@ -69,20 +126,32 @@ userRouter.post('/signup', async (req: Request, res: Response) => {
 
 userRouter.post('/signin', async (req: Request, res: Response) => {
 	const { id, password } = req.body;
-	if (!id || !password) {
-		throw new Error('users id and password are required in request.body');
-	}
 
 	try {
+		if (!id || !password) {
+			throw new Error('users id and password are required in request.body');
+		}
 		let user = await prisma.user.findUnique({
 			where: { id },
-			include: { messages: true, joinedRooms: true },
+			include: {
+				sentMessages: true,
+				receivedMessages: true,
+				joinedRooms: { include: { room: true, user: true } },
+				friendsList: true,
+				createdRooms: true,
+			},
 		});
 
 		if (!user) {
 			user = await prisma.user.findUnique({
 				where: { username: id },
-				include: { messages: true, joinedRooms: true },
+				include: {
+					sentMessages: true,
+					receivedMessages: true,
+					joinedRooms: { include: { room: true, user: true } },
+					friendsList: true,
+					createdRooms: true,
+				},
 			});
 			if (!user) throw new Error(`Couldn't find that user`);
 		}
@@ -92,7 +161,8 @@ userRouter.post('/signin', async (req: Request, res: Response) => {
 		const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
 			expiresIn: '2 days',
 		});
-		res.json({ success: true, data: { token, user } });
+		const { password: userPassword, ...restOfUser } = user;
+		res.json({ success: true, data: { token, user: { ...restOfUser } } });
 	} catch (err) {
 		if (err instanceof Error) {
 			res.status(401).json({ success: false, response: err.message });
@@ -130,16 +200,49 @@ userRouter.put('/:userId', async (req: Request, res: Response) => {
 				} was passed`
 			);
 		}
-		const response = await prisma.user.update({
+		const user = await prisma.user.update({
 			where: { id: req.params.userId },
 			data: { ...req.body.updatedUser },
+			include: {
+				sentMessages: true,
+				receivedMessages: true,
+				joinedRooms: { include: { room: true, user: true } },
+				friendsList: true,
+				createdRooms: true,
+			},
 		});
-		res.json({ success: true, response });
+		const { password, ...restOfUser } = user;
+		res.json({ success: true, data: { ...restOfUser } });
 	} catch (err) {
 		if (err instanceof Error) {
 			res.json({ success: false, response: err.message });
 		} else res.json({ success: false, response: err });
 	}
 });
+
+userRouter.put(
+	'/:userId/add-friend/:friendId',
+	async (req: Request, res: Response) => {
+		try {
+			const user = await prisma.user.update({
+				where: { id: req.params.userId },
+				data: { friendsList: { connect: { id: req.params.friendId } } },
+				include: {
+					sentMessages: true,
+					receivedMessages: true,
+					joinedRooms: { include: { room: true, user: true } },
+					friendsList: true,
+					createdRooms: true,
+				},
+			});
+
+			res.json({ success: true, data: user });
+		} catch (err) {
+			if (err instanceof Error) {
+				res.json({ success: false, response: err.message });
+			} else res.json({ success: false, response: err });
+		}
+	}
+);
 
 export default userRouter;

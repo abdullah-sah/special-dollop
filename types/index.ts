@@ -4,6 +4,15 @@ import {
 	RoomMembers,
 } from '../backend/node_modules/generated/prisma';
 
+declare global {
+	namespace Express {
+		interface Request {
+			// TODO: type up user to be User object (from prisma generated table)
+			user?: any;
+		}
+	}
+}
+
 export type ApiResponse<T> =
 	| {
 			success: true;
@@ -14,14 +23,27 @@ export type ApiResponse<T> =
 			error: string;
 	  };
 
-declare global {
-	namespace Express {
-		interface Request {
-			// TODO: type up user to be User object (from prisma generated table)
-			user?: any;
-		}
-	}
-}
+export type RoomMembersWithRelations = RoomMembers & {
+	user?: User;
+	room?: Room;
+};
+
+export type UserWithRelations = User & {
+	joinedRooms?: RoomMembersWithRelations[];
+	createdRooms?: Room[];
+	friendsList?: User[];
+	friendsOf?: User[];
+	blockedList?: User[];
+	blockedBy?: User[];
+	sentMessages?: MessageWithRelations[];
+	receivedMessages?: MessageWithRelations[];
+};
+
+export type MessageWithRelations = Message & {
+	sender?: User;
+	recipient?: User;
+	room?: Room;
+};
 
 export interface ServerToClientEvents {
 	kicked_user: (data: User) => void;
@@ -77,8 +99,8 @@ export type Message = {
 	id: string;
 	content: string;
 	timestamp: string;
-	sender: User;
-	recipient: User | Room;
+	sender: UserWithRelations;
+	recipient: UserWithRelations;
 	read?: boolean;
 	metadata?: MessageMetadata;
 };

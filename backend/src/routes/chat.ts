@@ -10,29 +10,63 @@ import {
 const prisma = new PrismaClient();
 const chatRouter = Router();
 
-// create a new message by a user, room, and content in the req.body
-chatRouter.post('/', async (req: Request, res: Response) => {
+// create a new message from a user to a room
+// pass in a user, room, and content in the req.body
+chatRouter.post('/room', async (req: Request, res: Response) => {
 	const {
-		user,
+		sender,
 		room,
 		content,
-	}: { user: User; room: Room | User; content: Message['content'] } = req.body;
+	}: { sender: User; room: Room; content: Message['content'] } = req.body;
 	try {
-		if (!user || !room || !content) {
-			throw new Error('Must pass in valid user, room, and content');
+		if (!sender || !room || !content) {
+			throw new Error('Must pass in valid sender, room, and content');
 		}
 
 		const response = await prisma.message.create({
 			data: {
 				content,
-				userId: user.id,
-				roomId: room.id,
+				sender: { connect: { id: sender.id } },
+				room: { connect: { id: room.id } },
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
 			},
+			include: { recipient: true, room: true, sender: true },
 		});
 
 		res.json({ success: true, response });
+	} catch (err) {
+		if (err instanceof Error) {
+			res.status(404).json({ success: false, response: err.message });
+		} else res.status(404).json({ success: false, response: err });
+	}
+});
+
+// create a message from a user to another user
+// pass in a sender (user), recipient (user), content
+chatRouter.post('/user', async (req: Request, res: Response) => {
+	const {
+		sender,
+		recipient,
+		content,
+	}: { sender: User; recipient: User; content: Message['content'] } = req.body;
+	try {
+		if (!sender || !recipient || !content) {
+			throw new Error('Must pass in valid sender, recipient, and content');
+		}
+
+		const response = await prisma.message.create({
+			data: {
+				content,
+				sender: { connect: { id: sender.id } },
+				recipient: { connect: { id: recipient.id } },
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			},
+			include: { recipient: true, room: true, sender: true },
+		});
+
+		res.json({ success: true, data: { ...response } });
 	} catch (err) {
 		if (err instanceof Error) {
 			res.status(404).json({ success: false, response: err.message });
@@ -53,6 +87,7 @@ chatRouter.put('/', async (req: Request, res: Response) => {
 		const response = await prisma.message.update({
 			where: { id },
 			data: { content, updatedAt: new Date().toISOString() },
+			include: { recipient: true, room: true, sender: true },
 		});
 
 		res.json({ success: true, response });
@@ -82,6 +117,7 @@ chatRouter.get('/:messageId', async (req: Request, res: Response) => {
 	try {
 		const response = await prisma.message.findUnique({
 			where: { id: req.params.messageId },
+			include: { room: true, sender: true, recipient: true },
 		});
 
 		if (!response)

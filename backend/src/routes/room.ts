@@ -114,6 +114,10 @@ roomRouter.post(
 						connect: { id: roomId },
 					},
 				},
+				include: {
+					room: true,
+					user: true,
+				},
 			});
 			res.json({ success: true, response });
 		} catch (err) {
@@ -139,6 +143,7 @@ roomRouter.delete(
 			const { roomId, userId } = req.params;
 			const response = await prisma.roomMembers.delete({
 				where: { userId_roomId: { roomId, userId } },
+				include: { user: true, room: true },
 			});
 			res.json({ success: true, response });
 		} catch (err) {
